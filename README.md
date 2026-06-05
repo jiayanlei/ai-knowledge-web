@@ -23,3 +23,4 @@ http://localhost:5173
 ```
 
 `/` 会重定向到 `/ai-chat`。
+# ai-knowledge-web
