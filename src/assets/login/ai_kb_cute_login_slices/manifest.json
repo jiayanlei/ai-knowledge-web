@@ -1,0 +1,412 @@
+{
+  "source": "/mnt/data/ai知识库登录界面设计.png",
+  "image_size": [
+    1672,
+    941
+  ],
+  "assets": [
+    {
+      "file": "00_full_page_reference.png",
+      "box": [
+        0,
+        0,
+        1672,
+        941
+      ],
+      "size": [
+        1672,
+        941
+      ]
+    },
+    {
+      "file": "01_top_left_brand_title.png",
+      "box": [
+        70,
+        105,
+        430,
+        175
+      ],
+      "size": [
+        360,
+        70
+      ]
+    },
+    {
+      "file": "02_left_slogan_copy.png",
+      "box": [
+        75,
+        190,
+        530,
+        300
+      ],
+      "size": [
+        455,
+        110
+      ]
+    },
+    {
+      "file": "03_left_hero_robot_scene.png",
+      "box": [
+        190,
+        255,
+        770,
+        650
+      ],
+      "size": [
+        580,
+        395
+      ]
+    },
+    {
+      "file": "04_robot_core.png",
+      "box": [
+        360,
+        285,
+        645,
+        555
+      ],
+      "size": [
+        285,
+        270
+      ]
+    },
+    {
+      "file": "05_search_panel_robot_front.png",
+      "box": [
+        310,
+        455,
+        565,
+        560
+      ],
+      "size": [
+        255,
+        105
+      ]
+    },
+    {
+      "file": "06_books_and_plant.png",
+      "box": [
+        0,
+        500,
+        315,
+        655
+      ],
+      "size": [
+        315,
+        155
+      ]
+    },
+    {
+      "file": "07_data_card_left.png",
+      "box": [
+        112,
+        380,
+        255,
+        460
+      ],
+      "size": [
+        143,
+        80
+      ]
+    },
+    {
+      "file": "08_chat_bubble_purple.png",
+      "box": [
+        262,
+        308,
+        382,
+        370
+      ],
+      "size": [
+        120,
+        62
+      ]
+    },
+    {
+      "file": "09_qa_card_top.png",
+      "box": [
+        625,
+        158,
+        795,
+        250
+      ],
+      "size": [
+        170,
+        92
+      ]
+    },
+    {
+      "file": "10_document_card_right.png",
+      "box": [
+        715,
+        370,
+        855,
+        485
+      ],
+      "size": [
+        140,
+        115
+      ]
+    },
+    {
+      "file": "11_folder_security_right.png",
+      "box": [
+        660,
+        492,
+        835,
+        610
+      ],
+      "size": [
+        175,
+        118
+      ]
+    },
+    {
+      "file": "12_network_nodes_bg.png",
+      "box": [
+        765,
+        180,
+        958,
+        455
+      ],
+      "size": [
+        193,
+        275
+      ]
+    },
+    {
+      "file": "13_feature_cards_all.png",
+      "box": [
+        32,
+        652,
+        895,
+        850
+      ],
+      "size": [
+        863,
+        198
+      ]
+    },
+    {
+      "file": "14_feature_knowledge.png",
+      "box": [
+        32,
+        652,
+        174,
+        850
+      ],
+      "size": [
+        142,
+        198
+      ]
+    },
+    {
+      "file": "15_feature_qa.png",
+      "box": [
+        178,
+        652,
+        322,
+        850
+      ],
+      "size": [
+        144,
+        198
+      ]
+    },
+    {
+      "file": "16_feature_doc.png",
+      "box": [
+        326,
+        652,
+        468,
+        850
+      ],
+      "size": [
+        142,
+        198
+      ]
+    },
+    {
+      "file": "17_feature_collab.png",
+      "box": [
+        472,
+        652,
+        606,
+        850
+      ],
+      "size": [
+        134,
+        198
+      ]
+    },
+    {
+      "file": "18_feature_security.png",
+      "box": [
+        610,
+        652,
+        748,
+        850
+      ],
+      "size": [
+        138,
+        198
+      ]
+    },
+    {
+      "file": "19_feature_insight.png",
+      "box": [
+        753,
+        652,
+        895,
+        850
+      ],
+      "size": [
+        142,
+        198
+      ]
+    },
+    {
+      "file": "20_right_login_card.png",
+      "box": [
+        1015,
+        123,
+        1608,
+        825
+      ],
+      "size": [
+        593,
+        702
+      ]
+    },
+    {
+      "file": "21_login_card_header.png",
+      "box": [
+        1140,
+        160,
+        1475,
+        255
+      ],
+      "size": [
+        335,
+        95
+      ]
+    },
+    {
+      "file": "22_input_work_id.png",
+      "box": [
+        1075,
+        310,
+        1545,
+        415
+      ],
+      "size": [
+        470,
+        105
+      ]
+    },
+    {
+      "file": "23_input_password.png",
+      "box": [
+        1075,
+        435,
+        1545,
+        540
+      ],
+      "size": [
+        470,
+        105
+      ]
+    },
+    {
+      "file": "24_login_options_row.png",
+      "box": [
+        1070,
+        560,
+        1548,
+        610
+      ],
+      "size": [
+        478,
+        50
+      ]
+    },
+    {
+      "file": "25_login_button.png",
+      "box": [
+        1077,
+        630,
+        1542,
+        690
+      ],
+      "size": [
+        465,
+        60
+      ]
+    },
+    {
+      "file": "26_apply_account_button.png",
+      "box": [
+        1075,
+        708,
+        1545,
+        770
+      ],
+      "size": [
+        470,
+        62
+      ]
+    },
+    {
+      "file": "27_language_switch.png",
+      "box": [
+        1468,
+        27,
+        1630,
+        70
+      ],
+      "size": [
+        162,
+        43
+      ]
+    },
+    {
+      "file": "28_footer.png",
+      "box": [
+        560,
+        865,
+        1115,
+        920
+      ],
+      "size": [
+        555,
+        55
+      ]
+    },
+    {
+      "file": "29_right_side_full_area.png",
+      "box": [
+        960,
+        0,
+        1672,
+        941
+      ],
+      "size": [
+        712,
+        941
+      ]
+    },
+    {
+      "file": "30_left_side_full_area.png",
+      "box": [
+        0,
+        0,
+        970,
+        941
+      ],
+      "size": [
+        970,
+        941
+      ]
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+:root {
+  --primary-color: #1677ff;
+  --primary-light: #eaf3ff;
+  --page-bg: #f6f9ff;
+  --card-bg: #ffffff;
+  --text-color: #1f2a44;
+  --text-secondary: #667085;
+  --border-color: #e5eaf3;
+  --success-color: #22c55e;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --radius-lg: 14px;
+  --radius-md: 10px;
+  --header-height: 56px;
+  --sidebar-width: 176px;
+  --knowledge-tree-width: 232px;
+  --right-panel-width: 320px;
+  --app-primary-color: #1677ff;
+  --app-bg-color: #f6f9ff;
+  --app-sidebar-width: var(--sidebar-width);
+  --app-header-height: 56px;
+  --app-border-color: #e5eaf3;
+  --app-text-color: #1f2937;
+  --app-text-secondary: #6b7280;
+  --app-card-radius: 12px;
+  --app-card-shadow: 0 4px 14px rgba(29, 78, 216, 0.05);
+  --app-page-padding: 16px;
+  --app-card-padding: 16px;
+  --app-section-gap: 12px;
+}
