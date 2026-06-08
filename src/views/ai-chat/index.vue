@@ -166,22 +166,6 @@
 
       <!-- =============== 右侧：证据与行动面板 =============== -->
       <aside class="ws-right">
-        <!-- 知识雷达 -->
-        <div class="wr-section wr-radar">
-          <div class="wrs-title"><AppIcon name="Aim" /><span>知识雷达</span></div>
-          <div class="radar-grid">
-            <div v-for="stat in radarStats" :key="stat.label" class="radar-item">
-              <span class="ri-icon" :style="{ color: stat.color, background: stat.color + '14' }">
-                <AppIcon :name="stat.icon" />
-              </span>
-              <div class="ri-info">
-                <strong>{{ stat.value }}</strong>
-                <span>{{ stat.label }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- 引用证据链 -->
         <div
           class="wr-section wr-evidence"
@@ -209,15 +193,18 @@
           </div>
         </div>
 
-        <!-- AI 快捷行动 -->
-        <div class="wr-section wr-actions">
-          <div class="wrs-title"><AppIcon name="MagicStick" /><span>AI 快捷行动</span></div>
-          <div class="qa-grid">
-            <button v-for="act in quickActions" :key="act.title" class="qa-btn" @click="handleQuickAction(act.title)">
-              <span class="qa-icon"><AppIcon :name="act.icon" /></span>
-              <strong>{{ act.title }}</strong>
-              <span class="qa-desc">{{ act.desc }}</span>
-            </button>
+        <!-- 知识处理进度 -->
+        <div class="wr-section wr-progress">
+          <div class="wrs-title"><AppIcon name="Operation" /><span>知识处理进度</span></div>
+          <div class="wp-list">
+            <div v-for="item in workbenchProgress" :key="item.label" class="wp-row">
+              <div class="wp-row-top">
+                <span>{{ item.label }}</span>
+                <strong>{{ item.value }}%</strong>
+              </div>
+              <span class="wp-bar"><span :style="{ width: item.value + '%' }" /></span>
+              <small>{{ item.desc }}</small>
+            </div>
           </div>
         </div>
 
@@ -256,9 +243,7 @@ import {
   knowledgeCategories,
   knowledgePathSteps,
   newUserGuide,
-  quickActions,
   quickScenes,
-  radarStats,
   relatedDocs,
   statusBarData,
   todayFAQs
@@ -282,6 +267,12 @@ let evidenceTimer: number | undefined
 let thinkingTimer: number | undefined
 let generatingTimer: number | undefined
 let typeTimer: number | undefined
+
+const workbenchProgress = [
+  { label: '语义理解', value: 92, desc: '已完成意图识别与关键词提取' },
+  { label: '证据同步', value: 78, desc: '正在同步制度、项目文档与来源片段' },
+  { label: '知识沉淀', value: 64, desc: '待确认 3 条可复用问答资产' }
+]
 
 // ---------- 计算属性 ----------
 const isAnswering = computed(() => chatStatus.value === 'thinking' || chatStatus.value === 'generating')
@@ -400,12 +391,13 @@ function startStreamingAnswer(payload: ChatSendPayload) {
 
 function typeMessage(messageId: number, fullText: string) {
   let i = 0
-  const msg = messages.value.find((m) => m.id === messageId)
-  if (!msg) {
+  const _found = messages.value.find((m) => m.id === messageId)
+  if (!_found) {
     streamingMessageId.value = null
     chatStatus.value = 'idle'
     return
   }
+  const msg = _found
 
   function tick() {
     if (streamingMessageId.value !== messageId) return
@@ -495,10 +487,6 @@ function handleToggleDetails(messageId: number) {
   // This emit is for potential parent-level tracking if needed
 }
 
-function handleQuickAction(title: string) {
-  ElMessage.info(`正在执行快捷行动：${title}`)
-}
-
 watch(() => messages.value.length, scrollToBottom, { immediate: true })
 </script>
 
@@ -507,7 +495,7 @@ watch(() => messages.value.length, scrollToBottom, { immediate: true })
 .ws-page {
   position: relative;
   display: grid;
-  grid-template-columns: 20% minmax(0, 56fr) 24%;
+  grid-template-columns: minmax(190px, 18%) minmax(0, 1fr) minmax(280px, 22%);
   gap: 12px;
   width: 100%;
   height: 100%;
@@ -1589,52 +1577,6 @@ watch(() => messages.value.length, scrollToBottom, { immediate: true })
   :deep(svg) { width: 16px; color: #2563eb; }
 }
 
-// 知识雷达
-.radar-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.radar-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px;
-  border-radius: 10px;
-  background: #f8fafc;
-  border: 1px solid #f1f5f9;
-}
-
-.ri-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  flex: 0 0 auto;
-
-  :deep(svg) { width: 16px; }
-}
-
-.ri-info {
-  display: flex;
-  flex-direction: column;
-
-  strong {
-    font-size: 15px;
-    font-weight: 800;
-    color: #0f172a;
-  }
-
-  span {
-    font-size: 11px;
-    color: #94a3b8;
-    margin-top: 1px;
-  }
-}
-
 // 引用证据链
 .wr-evidence {
   transition:
@@ -1795,61 +1737,69 @@ watch(() => messages.value.length, scrollToBottom, { immediate: true })
   transition: width 0.3s;
 }
 
-// AI 快捷行动
-.qa-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+// 知识处理进度
+.wr-progress {
+  position: relative;
+  overflow: hidden;
 
-  // 最后一个按钮如果是奇数个，跨两列
-  .qa-btn:last-child:nth-child(odd) {
-    grid-column: span 2;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 16% 16%, rgba(37, 99, 235, 0.08), transparent 34%),
+      linear-gradient(135deg, rgba(37, 99, 235, 0.04), rgba(14, 165, 233, 0.03));
+    pointer-events: none;
   }
 }
 
-.qa-btn {
+.wp-list {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 12px 8px;
-  border: 1px solid #f1f5f9;
-  border-radius: 10px;
-  background: #f8fafc;
-  cursor: pointer;
-  transition: all 0.18s;
+  gap: 12px;
+}
 
-  &:hover {
-    border-color: #93c5fd;
-    background: #eff6ff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+.wp-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wp-row-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+
+  strong {
+    color: #2563eb;
+    font-size: 13px;
   }
 }
 
-.qa-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  color: #2563eb;
-  background: #eff6ff;
+.wp-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
 
-  :deep(svg) { width: 16px; }
+  span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #2563eb, #06b6d4);
+    box-shadow: 0 0 12px rgba(37, 99, 235, 0.28);
+  }
 }
 
-.qa-btn strong {
-  font-size: 12px;
-  font-weight: 700;
-  color: #1e293b;
-}
-
-.qa-desc {
-  font-size: 10px;
+.wp-row small {
   color: #94a3b8;
-  text-align: center;
+  font-size: 11px;
+  line-height: 1.45;
 }
 
 // 相关文档

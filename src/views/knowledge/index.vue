@@ -17,10 +17,11 @@
           </div>
         </div>
         <div class="cmd-stats">
-          <div class="cs-item"><strong>{{ topStats.total }}</strong><span>知识总量</span></div>
-          <div class="cs-item"><strong>{{ topStats.monthUpdate }}</strong><span>本月更新</span></div>
-          <div class="cs-item"><strong>{{ topStats.hotViews }}</strong><span>热门访问</span></div>
-          <div class="cs-item cs-item--warn"><strong>{{ topStats.needsUpdate }}</strong><span>待更新</span></div>
+          <div v-for="item in cmdStats" :key="item.label" class="cs-item" :class="item.className">
+            <span class="cs-icon"><AppIcon :name="item.icon" /></span>
+            <strong>{{ item.value }}</strong>
+            <span>{{ item.label }}</span>
+          </div>
         </div>
       </header>
 
@@ -91,11 +92,16 @@
             </div>
 
             <!-- 知识雷达 -->
-            <div class="section-header"><h3>知识雷达</h3><span class="section-sub">实时知识运行状态</span></div>
-            <div class="radar-list">
-              <div v-for="r in radarItems" :key="r.id" class="radar-item">
-                <div class="ri-icon" :class="'ri-icon--' + r.type"><AppIcon :name="r.icon" /></div>
-                <span class="ri-text">{{ r.text }}</span>
+            <div class="section-header"><h3>知识雷达</h3><span class="section-sub">实时知识感知中心</span></div>
+            <div class="radar-zone">
+              <div class="radar-scan-line" />
+              <div class="radar-grid-bg" />
+              <div class="radar-list">
+                <div v-for="r in radarItems" :key="r.id" class="radar-item">
+                  <div class="ri-icon" :class="'ri-icon--' + r.type"><AppIcon :name="r.icon" /></div>
+                  <span class="ri-text">{{ r.text }}</span>
+                  <span class="ri-pulse" />
+                </div>
               </div>
             </div>
           </div>
@@ -327,6 +333,15 @@ const recentCards = computed(() => {
   return list.length > 0 ? list : allCards.value.slice(0, 4)
 })
 
+const cmdStats = computed(() => [
+  { label: '知识节点总数', value: topStats.value.total, icon: 'DataLine', className: '' },
+  { label: '今日知识更新', value: topStats.value.monthUpdate, icon: 'Refresh', className: '' },
+  { label: '高价值知识数', value: topStats.value.hotViews, icon: 'TrendCharts', className: '' },
+  { label: '待完善知识点', value: topStats.value.needsUpdate, icon: 'WarningFilled', className: 'cs-item--warn' },
+  { label: '跨部门关联数', value: 42, icon: 'Connection', className: 'cs-item--link' },
+  { label: 'AI 推荐关注', value: 18, icon: 'MagicStick', className: 'cs-item--ai' }
+])
+
 // ===== 星系导航 =====
 function selectGalaxy(id: string) {
   activeGalaxy.value = activeGalaxy.value === id ? '' : id
@@ -416,6 +431,11 @@ function handleFollowUp(doc: DocDetail) {
   p { margin: 0 0 12px; font-size: 13px; opacity: 0.75; }
 }
 
+.cmd-left {
+  flex: 1;
+  min-width: 420px;
+}
+
 .cmd-search { display: flex; gap: 8px; margin-bottom: 10px;
   .search-input { flex: 1; }
   :deep(.el-input__wrapper) { border-radius: 8px; }
@@ -426,11 +446,96 @@ function handleFollowUp(doc: DocDetail) {
   :deep(.el-button) { color: rgba(255,255,255,0.8); font-size: 12px; &:hover { color: #fff; } }
 }
 
-.cmd-stats { display: flex; gap: 12px; flex-shrink: 0;
-  .cs-item { padding: 12px 16px; border-radius: 10px; background: rgba(255,255,255,0.1); backdrop-filter: blur(8px); text-align: center; min-width: 80px;
-    strong { display: block; font-size: 24px; font-weight: 800; line-height: 1.1; }
-    span { font-size: 11px; opacity: 0.7; }
-    &--warn strong { color: #fbbf24; }
+.cmd-stats {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(104px, 1fr));
+  gap: 10px;
+  width: min(420px, 40%);
+  flex-shrink: 0;
+  padding: 10px;
+  border: 1px solid rgba(191, 219, 254, 0.18);
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.28), rgba(59, 130, 246, 0.14)),
+    rgba(255, 255, 255, 0.06);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 28px rgba(96, 165, 250, 0.12);
+  backdrop-filter: blur(12px);
+
+  .cs-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 2px 8px;
+    align-items: center;
+    min-height: 70px;
+    padding: 10px;
+    border: 1px solid rgba(226, 232, 240, 0.12);
+    border-radius: 11px;
+    background: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.05));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+    overflow: hidden;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: auto 10px 8px 48px;
+      height: 2px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(125, 211, 252, 0.72), transparent);
+      opacity: 0.55;
+    }
+
+    .cs-icon {
+      grid-row: span 2;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      color: #bfdbfe;
+      background: rgba(15, 23, 42, 0.3);
+      box-shadow: 0 0 16px rgba(96, 165, 250, 0.16);
+
+      :deep(.app-icon) {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    strong {
+      display: block;
+      color: #f8fafc;
+      font-size: 25px;
+      font-weight: 900;
+      line-height: 1;
+      text-shadow: 0 0 14px rgba(125, 211, 252, 0.18);
+    }
+
+    span:last-child {
+      color: rgba(226, 232, 240, 0.72);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    &--warn strong,
+    &--warn .cs-icon {
+      color: #fbbf24;
+    }
+
+    &--link strong,
+    &--link .cs-icon {
+      color: #67e8f9;
+    }
+
+    &--ai strong,
+    &--ai .cs-icon {
+      color: #d8b4fe;
+    }
   }
 }
 
@@ -500,17 +605,106 @@ function handleFollowUp(doc: DocDetail) {
   .kc-expire-warn { margin-top: 6px; padding: 6px 10px; border-radius: 6px; background: #fffbeb; color: #d97706; font-size: 11px; }
 }
 
-/* 知识雷达 */
-.radar-list { display: flex; flex-direction: column; gap: 8px;
-  .radar-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px; border: 1px solid #e5eaf3; background: #fafbff;
-    .ri-icon { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0;
-      :deep(.app-icon) { width: 15px; height: 15px; }
-      &--hot { background: #fef2f2; color: #ef4444; } &--search { background: #eff6ff; color: #3b82f6; }
-      &--update { background: #ecfdf5; color: #10b981; } &--expire { background: #fffbeb; color: #f59e0b; }
-      &--collect { background: #fdf2f8; color: #ec4899; }
-    }
-    .ri-text { font-size: 13px; color: #475569; }
+/* 知识雷达 - 增强版 */
+.radar-zone {
+  position: relative;
+  padding: 20px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 58, 95, 0.88) 40%, rgba(67, 56, 202, 0.75) 100%);
+  overflow: hidden;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.radar-grid-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 24px, rgba(99,102,241,0.06) 24px, rgba(99,102,241,0.06) 25px),
+    repeating-linear-gradient(90deg, transparent, transparent 24px, rgba(99,102,241,0.06) 24px, rgba(99,102,241,0.06) 25px);
+  pointer-events: none;
+}
+
+.radar-scan-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(99,102,241,0.6) 50%, transparent 100%);
+  animation: radarScan 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes radarScan {
+  0% { top: 0; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.radar-zone .radar-list {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.radar-zone .radar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(8px);
+  transition: all 0.25s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(99, 102, 241, 0.35);
+    box-shadow: 0 0 16px rgba(99, 102, 241, 0.15);
+    transform: translateX(4px);
   }
+
+  .ri-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    flex-shrink: 0;
+    :deep(.app-icon) { width: 15px; height: 15px; }
+    &--hot { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+    &--search { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+    &--update { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+    &--expire { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+    &--collect { background: rgba(236, 72, 153, 0.2); color: #f9a8d4; }
+  }
+
+  .ri-text {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.85);
+    flex: 1;
+  }
+
+  .ri-pulse {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(99, 102, 241, 0.6);
+    flex-shrink: 0;
+    animation: pulse 2s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.5); }
 }
 
 /* ===== 文档详情 ===== */
@@ -618,6 +812,7 @@ function handleFollowUp(doc: DocDetail) {
   .kb-body { grid-template-columns: minmax(0, 1fr) 220px; }
   .galaxy-nav { display: none; }
   .cmd-center { flex-direction: column; }
-  .cmd-stats { justify-content: flex-start; }
+  .cmd-left { min-width: 0; width: 100%; }
+  .cmd-stats { width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 </style>

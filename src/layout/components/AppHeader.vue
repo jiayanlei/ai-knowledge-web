@@ -90,24 +90,51 @@
     </div>
   </header>
 
-  <el-dialog v-model="profileVisible" title="个人中心" width="520px" class="header-user-dialog" append-to-body>
-    <div class="profile-card">
-      <el-avatar :size="58" class="profile-avatar">{{ userInitial }}</el-avatar>
-      <div>
-        <h3>{{ userInfo.name }}</h3>
-        <p>{{ userInfo.company }} · {{ userInfo.department }}</p>
+  <el-dialog v-model="profileVisible" title="个人中心" width="680px" class="header-user-dialog" append-to-body>
+    <div class="profile-workbench">
+      <div class="profile-card">
+        <div class="profile-avatar-wrap">
+          <el-avatar :size="64" class="profile-avatar">{{ userInitial }}</el-avatar>
+        </div>
+        <div class="profile-main">
+          <h3>{{ userInfo.name }}</h3>
+          <p>{{ userInfo.company }} · {{ userInfo.department }} · 知识库管理员</p>
+          <div class="profile-tags">
+            <span>账号安全正常</span>
+            <span>内网设备在线</span>
+          </div>
+        </div>
+        <div class="profile-login">
+          <span>最近登录</span>
+          <strong>今天 09:12</strong>
+          <small>内网办公终端</small>
+        </div>
       </div>
-    </div>
 
-    <div class="info-grid">
-      <span>账号编号</span>
-      <strong>{{ userInfo.id }}</strong>
-      <span>所属公司</span>
-      <strong>{{ userInfo.company }}</strong>
-      <span>所属部门</span>
-      <strong>{{ userInfo.department }}</strong>
-      <span>当前角色</span>
-      <strong>知识库管理员</strong>
+      <div class="profile-stat-grid">
+        <div v-for="stat in profileStats" :key="stat.label" class="profile-stat">
+          <AppIcon :name="stat.icon" />
+          <strong>{{ stat.value }}</strong>
+          <span>{{ stat.label }}</span>
+        </div>
+      </div>
+
+      <div class="profile-panel-grid">
+        <div class="profile-panel">
+          <h4>最近访问知识</h4>
+          <button v-for="item in recentKnowledge" :key="item" type="button">{{ item }}</button>
+        </div>
+        <div class="profile-panel">
+          <h4>我的订阅知识</h4>
+          <button v-for="item in subscribedKnowledge" :key="item" type="button">{{ item }}</button>
+        </div>
+        <div class="profile-panel profile-panel--wide">
+          <h4>AI 使用偏好</h4>
+          <div class="preference-tags">
+            <span v-for="item in aiPreferences" :key="item">{{ item }}</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <template #footer>
@@ -115,43 +142,37 @@
     </template>
   </el-dialog>
 
-  <el-dialog v-model="accountVisible" title="账号设置" width="560px" class="header-user-dialog" append-to-body>
-    <div class="settings-list">
-      <div class="settings-item">
-        <span class="settings-icon">
-          <AppIcon name="Lock" />
-        </span>
+  <el-dialog v-model="accountVisible" title="账号设置" width="680px" class="header-user-dialog" append-to-body>
+    <div class="account-settings">
+      <div class="security-card">
         <div>
-          <strong>登录密码</strong>
-          <p>建议定期更新密码，确保账号安全。</p>
+          <span class="security-kicker">SECURITY LEVEL</span>
+          <h3>账号安全等级 86%</h3>
+          <p>密码强度、登录设备和通知策略均处于稳定状态。</p>
         </div>
-        <el-button size="small" @click="showAccountTip">修改</el-button>
+        <div class="security-ring">86</div>
       </div>
 
-      <div class="settings-item">
-        <span class="settings-icon">
-          <AppIcon name="Message" />
-        </span>
-        <div>
-          <strong>消息提醒</strong>
-          <p>文档解析、审核结果和系统公告会在右上角提醒。</p>
-        </div>
-        <el-button size="small" @click="showAccountTip">管理</el-button>
+      <div class="security-progress">
+        <span><i style="width: 86%" /></span>
       </div>
 
-      <div class="settings-item">
-        <span class="settings-icon">
-          <AppIcon name="Connection" />
-        </span>
-        <div>
-          <strong>最近登录</strong>
-          <p>今天 09:12 · 内网办公终端</p>
+      <div class="settings-list">
+        <div v-for="item in accountSettingGroups" :key="item.title" class="settings-item">
+          <span class="settings-icon">
+            <AppIcon :name="item.icon" />
+          </span>
+          <div>
+            <strong>{{ item.title }}</strong>
+            <p>{{ item.desc }}</p>
+          </div>
+          <span class="settings-state" :class="'settings-state--' + item.stateType">{{ item.state }}</span>
         </div>
-        <el-button size="small" @click="showAccountTip">查看</el-button>
       </div>
     </div>
 
     <template #footer>
+      <el-button @click="showAccountTip">保存偏好</el-button>
       <el-button @click="accountVisible = false">关闭</el-button>
     </template>
   </el-dialog>
@@ -181,6 +202,22 @@ const router = useRouter()
 const userStore = useUserStore()
 const userInfo = computed(() => userStore.userInfo)
 const userInitial = computed(() => userInfo.value.name.slice(0, 1))
+const profileStats = [
+  { label: '我的订阅', value: 12, icon: 'Star' },
+  { label: '常用文档', value: 26, icon: 'Document' },
+  { label: '本周 AI 问答', value: 48, icon: 'ChatDotRound' },
+  { label: '知识贡献', value: 9, icon: 'Promotion' }
+]
+const recentKnowledge = ['报销管理制度', '新员工入职流程', '数据安全规范']
+const subscribedKnowledge = ['项目交接规范', '权限申请流程', '团队资产库沉淀规范']
+const aiPreferences = ['优先展示引用来源', '回答保持简洁', '自动推荐相关制度', '关注流程风险提醒']
+const accountSettingGroups = [
+  { title: '登录方式', desc: '密码登录已启用，内网设备可信登录保持开启。', icon: 'Lock', state: '已启用', stateType: 'ok' },
+  { title: '密码安全', desc: '上次更新于 28 天前，当前强度满足企业安全策略。', icon: 'Key', state: '安全', stateType: 'ok' },
+  { title: '通知偏好', desc: '文档解析、审核结果和系统公告会在右上角提醒。', icon: 'Message', state: '已配置', stateType: 'ok' },
+  { title: '主题偏好', desc: '跟随系统主题，保持企业蓝色科技风界面。', icon: 'Brush', state: '自动', stateType: 'info' },
+  { title: 'AI 助手偏好', desc: '回答时优先给出结论、引用来源和下一步建议。', icon: 'MagicStick', state: '已同步', stateType: 'info' }
+]
 const notices = ref([
   {
     id: 1,
@@ -526,20 +563,67 @@ function showAccountTip() {
   }
 }
 
-.profile-card {
+.profile-workbench,
+.account-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.profile-card,
+.security-card {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 16px;
-  border: 1px solid var(--dialog-border, #e6eef8);
-  border-radius: 12px;
-  background: var(--dialog-soft-bg, #f8fbff);
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(37, 99, 235, 0.13), transparent 32%),
+    linear-gradient(135deg, var(--dialog-soft-bg, #f8fbff), rgba(239, 246, 255, 0.82));
+  box-shadow:
+    0 14px 34px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(105deg, transparent 0%, rgba(96, 165, 250, 0.18) 44%, transparent 62%);
+    transform: translateX(-72%);
+    opacity: 0.62;
+    pointer-events: none;
+  }
+}
+
+.profile-avatar-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.18), rgba(14, 165, 233, 0.12));
+  box-shadow: 0 0 26px rgba(37, 99, 235, 0.22);
+}
+
+.profile-avatar {
+  color: #fff;
+  background: linear-gradient(135deg, #1e3a8a, #60a5fa);
+}
+
+.profile-main {
+  flex: 1;
+  min-width: 0;
 
   h3 {
     margin: 0;
     color: var(--dialog-text, #172554);
-    font-size: 20px;
-    font-weight: 800;
+    font-size: 22px;
+    font-weight: 900;
   }
 
   p {
@@ -549,37 +633,186 @@ function showAccountTip() {
   }
 }
 
-.profile-avatar {
-  color: #fff;
-  background: linear-gradient(135deg, #1e3a8a, #60a5fa);
-}
-
-.info-grid {
-  display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
-  gap: 12px 16px;
-  margin-top: 16px;
-  padding: 16px;
-  border: 1px solid var(--dialog-border, #e6eef8);
-  border-radius: 12px;
+.profile-tags,
+.preference-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
 
   span {
-    color: var(--dialog-muted, #64748b);
-    font-size: 13px;
-  }
-
-  strong {
-    min-width: 0;
-    color: var(--dialog-text, #172554);
-    font-size: 13px;
+    padding: 4px 9px;
+    border: 1px solid rgba(37, 99, 235, 0.14);
+    border-radius: 999px;
+    color: #2563eb;
+    background: rgba(239, 246, 255, 0.82);
+    font-size: 12px;
     font-weight: 700;
   }
 }
 
-.settings-list {
+.profile-login {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: flex-end;
+  color: var(--dialog-muted, #64748b);
+  font-size: 12px;
+
+  strong {
+    margin-top: 4px;
+    color: var(--dialog-text, #172554);
+    font-size: 14px;
+  }
+
+  small {
+    margin-top: 3px;
+    color: #2563eb;
+  }
+}
+
+.profile-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.profile-stat {
+  display: grid;
+  gap: 5px;
+  justify-items: center;
+  padding: 13px 10px;
+  border: 1px solid var(--dialog-border, #e6eef8);
+  border-radius: 12px;
+  background: var(--dialog-soft-bg, #f8fbff);
+
+  .app-icon {
+    width: 18px;
+    height: 18px;
+    color: #2563eb;
+  }
+
+  strong {
+    color: var(--dialog-text, #172554);
+    font-size: 21px;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  span {
+    color: var(--dialog-muted, #64748b);
+    font-size: 12px;
+  }
+}
+
+.profile-panel-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.profile-panel {
+  padding: 14px;
+  border: 1px solid var(--dialog-border, #e6eef8);
+  border-radius: 12px;
+  background: var(--dialog-soft-bg, #f8fbff);
+
+  h4 {
+    margin: 0 0 10px;
+    color: var(--dialog-text, #172554);
+    font-size: 14px;
+    font-weight: 900;
+  }
+
+  button {
+    display: block;
+    width: 100%;
+    margin-top: 7px;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    color: #334155;
+    background: rgba(255, 255, 255, 0.7);
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.18s ease;
+
+    &:hover {
+      border-color: rgba(37, 99, 235, 0.24);
+      color: #2563eb;
+      background: #eff6ff;
+      transform: translateY(-1px);
+    }
+  }
+}
+
+.profile-panel--wide {
+  grid-column: 1 / -1;
+}
+
+.security-card {
+  justify-content: space-between;
+  color: var(--dialog-text, #172554);
+
+  h3 {
+    margin: 4px 0;
+    font-size: 22px;
+    font-weight: 900;
+  }
+
+  p {
+    margin: 0;
+    color: var(--dialog-muted, #64748b);
+    font-size: 13px;
+  }
+}
+
+.security-kicker {
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.6px;
+}
+
+.security-ring {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border: 7px solid rgba(37, 99, 235, 0.16);
+  border-top-color: #2563eb;
+  border-right-color: #06b6d4;
+  border-radius: 50%;
+  color: #1d4ed8;
+  font-size: 22px;
+  font-weight: 900;
+  box-shadow: 0 0 22px rgba(37, 99, 235, 0.14);
+}
+
+.security-progress {
+  padding: 0 2px;
+
+  span {
+    display: block;
+    height: 7px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    overflow: hidden;
+  }
+
+  i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #2563eb, #06b6d4);
+    box-shadow: 0 0 16px rgba(37, 99, 235, 0.24);
+  }
+}
+
+.settings-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 .settings-item {
@@ -591,6 +824,13 @@ function showAccountTip() {
   border: 1px solid var(--dialog-border, #e6eef8);
   border-radius: 12px;
   background: var(--dialog-soft-bg, #f8fbff);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: rgba(37, 99, 235, 0.24);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+  }
 
   strong {
     display: block;
@@ -621,6 +861,24 @@ function showAccountTip() {
     width: 18px;
     height: 18px;
   }
+}
+
+.settings-state {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.settings-state--ok {
+  color: #16a34a;
+  background: #dcfce7;
+}
+
+.settings-state--info {
+  color: #2563eb;
+  background: #eff6ff;
 }
 
 :global(.header-notice-popover) {

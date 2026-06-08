@@ -26,13 +26,85 @@
 
       <!-- ===== 统计卡片 ===== -->
       <div class="stat-row">
-        <div class="stat-card app-card" v-for="s in statCards" :key="s.label">
+        <div class="stat-card app-card" v-for="s in statCards" :key="s.label" :class="{ 'is-active': activeStatCard === s.key }" @click="handleStatCardClick(s.key)" style="cursor: pointer;">
           <div class="sc-icon" :style="{ background: s.bg, color: s.color }"><AppIcon :name="s.icon" /></div>
           <div class="sc-info">
             <strong>{{ s.value }}</strong>
             <span>{{ s.label }}</span>
           </div>
           <svg class="sc-spark" viewBox="0 0 60 24"><polyline :points="s.spark" fill="none" :stroke="s.color" stroke-width="2" /></svg>
+        </div>
+      </div>
+
+      <!-- ===== 统计联动面板 ===== -->
+      <div v-if="activeStatCard" class="stat-detail-panel app-card">
+        <div class="sdp-header">
+          <h3>{{ statDetailTitle }}</h3>
+          <div class="sdp-actions">
+            <el-tag v-if="activeStatCard === 'pending'" v-for="filter in pendingFilters" :key="filter.value" :type="pendingStatusFilter === filter.value ? '' : 'info'" size="small" effect="plain" round @click="pendingStatusFilter = filter.value" style="cursor: pointer; margin-right: 4px;">{{ filter.label }}</el-tag>
+            <el-button text size="small" @click="activeStatCard = ''">关闭面板</el-button>
+          </div>
+        </div>
+
+        <!-- 待处理文档 -->
+        <el-table v-if="activeStatCard === 'pending'" :data="pendingDocs" stripe size="default" :header-cell-style="{ background: '#f8faff', color: '#475569', fontWeight: 600, fontSize: '12px' }">
+          <el-table-column prop="title" label="文档名称" min-width="200" show-overflow-tooltip />
+          <el-table-column prop="uploader" label="上传人" width="90" />
+          <el-table-column prop="uploadTime" label="上传时间" width="150" />
+          <el-table-column prop="type" label="文档类型" width="90" />
+          <el-table-column label="当前状态" width="100">
+            <template #default="{ row }"><el-tag :type="statusTagType(row.status)" size="small" effect="plain">{{ statusLabel(row.status) }}</el-tag></template>
+          </el-table-column>
+          <el-table-column label="预计动作" width="120">
+            <template #default="{ row }"><span class="pending-action">{{ getPendingAction(row) }}</span></template>
+          </el-table-column>
+        </el-table>
+
+        <!-- 已解析文档 -->
+        <el-table v-if="activeStatCard === 'parsed'" :data="parsedDocs" stripe size="default" :header-cell-style="{ background: '#f8faff', color: '#475569', fontWeight: 600, fontSize: '12px' }">
+          <el-table-column prop="title" label="文档名称" min-width="200" show-overflow-tooltip />
+          <el-table-column label="知识分类" width="120">
+            <template #default="{ row }"><el-tag size="small" effect="plain">{{ row.sourceName }}</el-tag></template>
+          </el-table-column>
+          <el-table-column prop="uploadTime" label="解析时间" width="150" />
+          <el-table-column prop="segments" label="切片数量" width="90" />
+          <el-table-column label="质量评分" width="100">
+            <template #default="{ row }"><span v-if="row.qualityScore" :style="{ color: qualityColor(row.qualityScore), fontWeight: 600 }">{{ row.qualityScore }}%</span><span v-else class="muted-text">—</span></template>
+          </el-table-column>
+          <el-table-column label="操作" width="120" align="center">
+            <template #default="{ row }"><el-button text size="small" type="primary" @click.stop="openParseResult(row)">查看详情</el-button></template>
+          </el-table-column>
+        </el-table>
+
+        <!-- 解析失败文档 -->
+        <el-table v-if="activeStatCard === 'failed'" :data="failedDocs" stripe size="default" :header-cell-style="{ background: '#f8faff', color: '#475569', fontWeight: 600, fontSize: '12px' }">
+          <el-table-column prop="title" label="文档名称" min-width="200" show-overflow-tooltip />
+          <el-table-column label="失败原因" min-width="200">
+            <template #default="{ row }"><span class="fail-reason">{{ getFailReason(row) }}</span></template>
+          </el-table-column>
+          <el-table-column prop="uploader" label="上传人" width="90" />
+          <el-table-column prop="uploadTime" label="失败时间" width="150" />
+          <el-table-column label="操作" width="100" align="center">
+            <template #default="{ row }"><el-button text size="small" type="primary" @click.stop="handleReparse(row)">重新解析</el-button></template>
+          </el-table-column>
+        </el-table>
+
+        <!-- 今日上传文档 -->
+        <el-table v-if="activeStatCard === 'today'" :data="todayDocs" stripe size="default" :header-cell-style="{ background: '#f8faff', color: '#475569', fontWeight: 600, fontSize: '12px' }">
+          <el-table-column prop="title" label="文档名称" min-width="200" show-overflow-tooltip />
+          <el-table-column prop="uploadTime" label="上传时间" width="150" />
+          <el-table-column prop="uploader" label="上传人" width="90" />
+          <el-table-column label="解析状态" width="100">
+            <template #default="{ row }"><el-tag :type="statusTagType(row.status)" size="small" effect="plain">{{ statusLabel(row.status) }}</el-tag></template>
+          </el-table-column>
+          <el-table-column prop="dept" label="所属部门" width="120" />
+          <el-table-column prop="sourceName" label="来源渠道" width="140" />
+        </el-table>
+
+        <!-- 空状态 -->
+        <div v-if="statDetailDocs.length === 0" class="sdp-empty">
+          <AppIcon name="Document" style="font-size: 36px; color: #d1d5db; margin-bottom: 8px;" />
+          <p>暂无{{ statDetailTitle }}数据</p>
         </div>
       </div>
 
@@ -659,6 +731,8 @@ const filterTag = ref('')
 const viewMode = ref<'card' | 'table' | 'pipeline'>('card')
 const activeSource = ref('')
 const selectedDoc = ref<DocumentAsset | null>(null)
+const activeStatCard = ref('today')
+const pendingStatusFilter = ref('')
 
 // ===== 弹窗/抽屉 =====
 const uploadDrawerVisible = ref(false)
@@ -687,15 +761,57 @@ const aiSwitches = reactive({
 
 // ===== 统计卡片 =====
 const statCards = computed(() => [
-  { label: '文档总数', value: topStats.value.total, icon: 'Document', color: '#6366f1', bg: '#eef2ff', spark: '0,20 10,16 20,12 30,8 40,14 50,6 60,4' },
-  { label: '已解析', value: topStats.value.parsed, icon: 'CircleCheck', color: '#22c55e', bg: '#f0fdf4', spark: '0,18 10,14 20,12 30,10 40,8 50,6 60,4' },
-  { label: '解析中', value: topStats.value.parsing, icon: 'Loading', color: '#3b82f6', bg: '#eff6ff', spark: '0,12 10,14 20,10 30,16 40,8 50,12 60,6' },
-  { label: '解析失败', value: topStats.value.failed, icon: 'CircleClose', color: '#ef4444', bg: '#fef2f2', spark: '0,8 10,10 20,14 30,12 40,16 50,10 60,8' },
-  { label: '待处理', value: topStats.value.pendingCount, icon: 'Clock', color: '#f59e0b', bg: '#fffbeb', spark: '0,14 10,10 20,16 30,8 40,12 50,6 60,10' },
-  { label: '知识片段', value: topStats.value.segments, icon: 'Files', color: '#8b5cf6', bg: '#f5f3ff', spark: '0,20 10,16 20,12 30,8 40,14 50,6 60,4' },
-  { label: '向量索引', value: topStats.value.vectors, icon: 'Connection', color: '#14b8a6', bg: '#f0fdfa', spark: '0,18 10,14 20,10 30,8 40,6 50,4 60,2' },
-  { label: '今日上传', value: topStats.value.todayUpload, icon: 'Upload', color: '#ec4899', bg: '#fdf2f8', spark: '0,6 10,8 20,10 30,8 40,12 50,10 60,14' }
+  { key: 'total', label: '文档总数', value: topStats.value.total, icon: 'Document', color: '#6366f1', bg: '#eef2ff', spark: '0,20 10,16 20,12 30,8 40,14 50,6 60,4' },
+  { key: 'parsed', label: '已解析', value: topStats.value.parsed, icon: 'CircleCheck', color: '#22c55e', bg: '#f0fdf4', spark: '0,18 10,14 20,12 30,10 40,8 50,6 60,4' },
+  { key: 'parsing', label: '解析中', value: topStats.value.parsing, icon: 'Loading', color: '#3b82f6', bg: '#eff6ff', spark: '0,12 10,14 20,10 30,16 40,8 50,12 60,6' },
+  { key: 'failed', label: '解析失败', value: topStats.value.failed, icon: 'CircleClose', color: '#ef4444', bg: '#fef2f2', spark: '0,8 10,10 20,14 30,12 40,16 50,10 60,8' },
+  { key: 'pending', label: '待处理', value: topStats.value.pendingCount, icon: 'Clock', color: '#f59e0b', bg: '#fffbeb', spark: '0,14 10,10 20,16 30,8 40,12 50,6 60,10' },
+  { key: 'segments', label: '知识片段', value: topStats.value.segments, icon: 'Files', color: '#8b5cf6', bg: '#f5f3ff', spark: '0,20 10,16 20,12 30,8 40,14 50,6 60,4' },
+  { key: 'vectors', label: '向量索引', value: topStats.value.vectors, icon: 'Connection', color: '#14b8a6', bg: '#f0fdfa', spark: '0,18 10,14 20,10 30,8 40,6 50,4 60,2' },
+  { key: 'today', label: '今日上传', value: topStats.value.todayUpload, icon: 'Upload', color: '#ec4899', bg: '#fdf2f8', spark: '0,6 10,8 20,10 30,8 40,12 50,10 60,14' }
 ])
+
+const statDetailTitle = computed(() => {
+  const map: Record<string, string> = {
+    total: '全部文档', parsed: '已解析文档', parsing: '解析中文档',
+    failed: '解析失败文档', pending: '待处理文档', segments: '知识片段',
+    vectors: '向量索引文档', today: '今日上传文档'
+  }
+  return map[activeStatCard.value] || '文档列表'
+})
+
+const pendingFilters = [
+  { value: '', label: '全部' },
+  { value: 'pending', label: '待解析' },
+  { value: 'parsing', label: '排队中' },
+]
+
+const todayDate = computed(() => {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+})
+
+const todayDocs = computed(() => documents.value.filter(d => d.uploadTime.startsWith(todayDate.value)))
+
+const parsedDocs = computed(() => documents.value.filter(d => ['parsed', 'indexed'].includes(d.status)))
+
+const failedDocs = computed(() => documents.value.filter(d => d.status === 'failed'))
+
+const pendingDocs = computed(() => {
+  let list = documents.value.filter(d => ['pending', 'parsing'].includes(d.status))
+  if (pendingStatusFilter.value) list = list.filter(d => d.status === pendingStatusFilter.value)
+  return list
+})
+
+const statDetailDocs = computed(() => {
+  switch (activeStatCard.value) {
+    case 'today': return todayDocs.value
+    case 'parsed': return parsedDocs.value
+    case 'failed': return failedDocs.value
+    case 'pending': return pendingDocs.value
+    default: return []
+  }
+})
 
 // ===== 过滤 =====
 const filteredDocs = computed(() => {
@@ -782,6 +898,23 @@ function pipeStatusLabel(p: PipelineRecord) {
 }
 
 // ===== 操作 =====
+function handleStatCardClick(key: string) {
+  activeStatCard.value = activeStatCard.value === key ? '' : key
+}
+
+function getPendingAction(row: DocumentAsset): string {
+  if (row.status === 'pending') return '等待自动解析'
+  if (row.status === 'parsing') return '正在解析中...'
+  return '排队等待处理'
+}
+
+function getFailReason(row: DocumentAsset): string {
+  if (row.risk) return row.risk
+  const reasons = ['文件格式异常，无法提取文本', '内容为空或损坏', '权限不足，无法读取', '解析超时，服务繁忙', 'OCR 识别失败']
+  const idx = parseInt(row.id.replace('d', '')) % reasons.length
+  return reasons[idx]
+}
+
 function handleSearch() { /* search already reactive */ }
 function selectDoc(doc: DocumentAsset) {
   selectedDoc.value = doc
@@ -863,7 +996,7 @@ function handleBatchAction(cmd: string) {
 
 /* ===== 统计卡片 ===== */
 .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
-  .stat-card { display: flex; align-items: center; gap: 10px; padding: 14px; position: relative; overflow: hidden; transition: transform 0.2s;
+  .stat-card { display: flex; align-items: center; gap: 10px; padding: 14px; position: relative; overflow: hidden; transition: transform 0.2s; border: 2px solid transparent;
     &:hover { transform: translateY(-2px); }
     .sc-icon { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
     .sc-info { display: flex; flex-direction: column; strong { font-size: 19px; font-weight: 700; color: var(--text-color); } span { font-size: 12px; color: var(--text-secondary); } }
@@ -1103,6 +1236,44 @@ function handleBatchAction(cmd: string) {
 
 /* ===== 通用 ===== */
 .empty-tip { grid-column: 1 / -1; text-align: center; padding: 40px 0; font-size: 13px; color: var(--text-secondary); }
+
+/* ===== 统计联动面板 ===== */
+.stat-detail-panel {
+  padding: 16px 18px;
+  animation: slideDown 0.25s ease;
+
+  .sdp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    h3 { margin: 0; font-size: 15px; font-weight: 700; color: var(--text-color); }
+    .sdp-actions { display: flex; align-items: center; gap: 6px; }
+  }
+
+  .sdp-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+    p { font-size: 13px; color: var(--text-secondary); margin: 0; }
+  }
+
+  .fail-reason { color: #ef4444; font-size: 12px; }
+  .pending-action { color: #f59e0b; font-size: 12px; font-weight: 500; }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Stat card active state */
+.stat-card.is-active {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15), 0 8px 20px rgba(29, 78, 216, 0.1) !important;
+}
 
 /* ===== 响应式 ===== */
 @media (max-width: 1400px) { .dc-body { grid-template-columns: 210px 1fr 290px; } .stat-row { grid-template-columns: repeat(4, 1fr); } }

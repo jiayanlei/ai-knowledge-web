@@ -158,9 +158,8 @@
 
           <!-- 热门问题视图 -->
           <div v-if="activeTab === 'hot'" class="hot-question-list">
-            <div class="section-title">热门问题 TOP 5</div>
-            <div v-for="(hq, idx) in hotQuestions" :key="hq.id" class="hot-item">
-              <span class="hot-rank" :class="{ 'hot-rank--top': idx < 3 }">{{ idx + 1 }}</span>
+            <div class="section-title">热门问题趋势摘要</div>
+            <div v-for="hq in hotQuestions.slice(0, 3)" :key="hq.id" class="hot-item hot-item--summary">
               <div class="hot-info">
                 <span class="hot-title">{{ hq.title }}</span>
                 <div class="hot-meta">
@@ -192,11 +191,11 @@
             </div>
           </div>
 
-          <!-- 热门问题 TOP 5 -->
+          <!-- 右侧问题 TOP 5 -->
           <div class="panel-card app-card">
             <div class="panel-card-header">
               <AppIcon name="TrendCharts" />
-              <h3>热门问题 TOP 5</h3>
+              <h3>问题 TOP 5</h3>
             </div>
             <div class="hot-mini-list">
               <div v-for="(hq, idx) in hotQuestions" :key="hq.id" class="hot-mini-item">

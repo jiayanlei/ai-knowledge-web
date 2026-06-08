@@ -67,7 +67,7 @@ export function getSearchResultsMock(): SearchResult[] {
     { id: 'r14', title: '信息安全管理办法', summary: '规定了公司信息安全的整体策略，包括密码管理、数据分级、访问控制、安全事件响应和违规处理。涉及敏感数据的文档需要加密存储。', matchScore: 62, category: 'company_policy', categoryLabel: '公司制度', source: 'tech_center', sourceLabel: '技术中心', dept: '安全团队', tags: ['安全', '保密', '数据分级'], updateTime: '2026-05-25', state: 'latest', stateLabel: '最新有效', authority: 'official', views: 880, citations: 18, smartTags: ['risk'], version: 'V3.0', badges: ['官方制度', '风险提示'] },
     { id: 'r15', title: '微服务链路追踪指南', summary: '介绍了基于 SkyWalking 的微服务链路追踪方案，包括 Agent 部署、数据收集、链路分析和告警配置。', matchScore: 58, category: 'project', categoryLabel: '项目文档', source: 'tech_center', sourceLabel: '技术中心', dept: '架构组', tags: ['微服务', 'SkyWalking', '监控'], updateTime: '2026-05-15', state: 'latest', stateLabel: '最新有效', authority: 'verified', views: 540, citations: 10, smartTags: [], version: 'V1.2', badges: [] },
     { id: 'r16', title: '年假可以休几天？', summary: '入职满 1 年享有 5 天年假，满 5 年享有 10 天年假，满 10 年享有 15 天年假。年假可以拆分使用，最小单位为半天。', matchScore: 94, category: 'faq', categoryLabel: '常见问题', source: 'hr_center', sourceLabel: '人事中心', dept: '人力资源部', tags: ['年假', '请假', 'FAQ'], updateTime: '2026-06-04', state: 'latest', stateLabel: '最新有效', authority: 'verified', views: 960, citations: 32, smartTags: ['hot', 'newbie'], version: 'V2.0', badges: ['高频访问'] },
-    { id: 'r17', title: '项目交接文档模板', summary: '提供了标准化的项目交接文档模板，包括项目概况、技术架构、部署说明、运维手册、联系人列表和待办事项等章节。', matchScore: 55, category: 'project', categoryLabel: '项目文档', source: 'project_assets', sourceLabel: '项目资产库', dept: '技术管理部', tags: ['交接', '模板', '项目'], updateTime: '2026-06-05', state: 'draft', stateLabel: '草稿文档', authority: 'community', views: 45, citations: 0, smartTags: [], version: 'V0.1', badges: ['草稿'] },
+    { id: 'r17', title: '项目交接文档模板', summary: '提供了标准化的项目交接文档模板，包括项目概况、技术架构、部署说明、运维手册、联系人列表和待办事项等章节。', matchScore: 55, category: 'project', categoryLabel: '项目文档', source: 'project_assets', sourceLabel: '团队资产库', dept: '技术管理部', tags: ['交接', '模板', '项目'], updateTime: '2026-06-05', state: 'draft', stateLabel: '草稿文档', authority: 'community', views: 45, citations: 0, smartTags: [], version: 'V0.1', badges: ['草稿'] },
     { id: 'r18', title: '权限申请流程', summary: '说明了员工申请系统权限的标准流程，包括 OA 权限、Git 权限、服务器权限、数据库权限的申请方式、审批节点和有效期管理。', matchScore: 74, category: 'process', categoryLabel: '流程规范', source: 'tech_center', sourceLabel: '技术中心', dept: 'IT 运维组', tags: ['权限', '申请', 'OA'], updateTime: '2026-05-10', state: 'latest', stateLabel: '最新有效', authority: 'verified', views: 480, citations: 14, smartTags: ['newbie', 'approval'], version: 'V2.0', badges: ['最新版本'] }
   ]
 }
@@ -255,7 +255,7 @@ export const sourceOptions = [
   { value: 'hr_center', label: '人事中心' },
   { value: 'finance_center', label: '财务中心' },
   { value: 'tech_center', label: '技术中心' },
-  { value: 'project_assets', label: '项目资产库' },
+  { value: 'project_assets', label: '团队资产库' },
   { value: 'culture_lib', label: '企业文化库' }
 ]
 

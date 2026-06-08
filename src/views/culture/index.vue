@@ -310,22 +310,22 @@
               </div>
             </el-tab-pane>
 
-            <!-- ====== AI 问答 ====== -->
-            <el-tab-pane label="AI 问答" name="ai">
-              <div class="section-block ai-section">
-                <div class="ai-inline-chat">
-                  <div class="ai-welcome">
-                    <AppIcon name="ChatDotRound" />
-                    <p>{{ aiWelcome }}</p>
-                  </div>
-                  <div class="ai-messages" ref="aiInlineMsgRef">
-                    <div v-for="msg in aiInlineMessages" :key="msg.id" class="ai-msg" :class="'ai-msg--' + msg.role">
-                      <div class="ai-msg-bubble">{{ msg.content }}</div>
+            <!-- ====== 文化时间线 ====== -->
+            <el-tab-pane label="文化时间线" name="timeline">
+              <div class="section-block">
+                <div class="culture-timeline">
+                  <div v-for="item in cultureTimeline" :key="item.id" class="ct-item">
+                    <div class="ct-marker">
+                      <span class="ct-dot" :style="{ background: item.color }" />
+                      <span v-if="item.id < cultureTimeline.length" class="ct-line" />
                     </div>
-                  </div>
-                  <div class="ai-presets">
-                    <span class="preset-label">试试问我：</span>
-                    <el-button v-for="q in aiPresets" :key="q" size="small" round @click="handleInlineAsk(q)">{{ q }}</el-button>
+                    <div class="ct-content">
+                      <div class="ct-header">
+                        <el-tag size="small" effect="dark" :color="item.color" style="border: none; color: #fff;">{{ item.year }}</el-tag>
+                        <h4>{{ item.title }}</h4>
+                      </div>
+                      <p class="ct-desc">{{ item.description }}</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -333,22 +333,25 @@
           </el-tabs>
         </div>
 
-        <!-- 右侧：AI 助手 + 热词 + 活动 -->
+        <!-- 右侧：文化活动动态 + 热词 + 活动 -->
         <aside class="culture-sidebar">
-          <!-- AI 文化助手 -->
-          <div class="sidebar-card app-card sidebar-ai">
+          <!-- 文化活动动态 -->
+          <div class="sidebar-card app-card sidebar-activities">
             <div class="sc-header">
-              <AppIcon name="ChatDotRound" />
-              <h3>AI 文化助手</h3>
+              <AppIcon name="Calendar" />
+              <h3>文化活动动态</h3>
             </div>
-            <div class="ai-chat-box" ref="aiSideMsgRef">
-              <div class="ai-welcome-mini">{{ aiWelcome }}</div>
-              <div v-for="msg in aiSideMessages" :key="msg.id" class="ai-msg" :class="'ai-msg--' + msg.role">
-                <div class="ai-msg-bubble">{{ msg.content }}</div>
+            <div class="activity-list">
+              <div v-for="act in sidebarActivities" :key="act.id" class="activity-item">
+                <div class="act-date-badge">
+                  <span class="act-month">{{ act.month }}</span>
+                  <span class="act-day">{{ act.day }}</span>
+                </div>
+                <div class="act-info">
+                  <span class="act-title">{{ act.title }}</span>
+                  <span class="act-desc">{{ act.description }}</span>
+                </div>
               </div>
-            </div>
-            <div class="ai-presets-mini">
-              <el-button v-for="q in aiPresets.slice(0, 4)" :key="q" size="small" round @click="handleSideAsk(q)">{{ q }}</el-button>
             </div>
           </div>
 
@@ -390,7 +393,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import PageContainer from '@/components/PageContainer/index.vue'
 import AppIcon from '@/components/AppIcon/index.vue'
@@ -405,11 +408,7 @@ import {
   getHonorRecordsMock,
   getTeamEventsMock,
   getPoliciesMock,
-  getAiPresetQuestions,
-  getAiWelcomeMessage,
-  getAiAnswer,
   getHotWordsMock,
-  type AiChatMessage,
   type TeamEvent
 } from './mock'
 
@@ -424,9 +423,25 @@ const stories = ref(getCultureStoriesMock())
 const honorRecords = ref(getHonorRecordsMock())
 const events = ref(getTeamEventsMock())
 const policyCategories = ref(getPoliciesMock())
-const aiPresets = ref(getAiPresetQuestions())
-const aiWelcome = ref(getAiWelcomeMessage())
 const hotWords = ref(getHotWordsMock())
+
+// ===== 文化时间线数据 =====
+const cultureTimeline = ref([
+  { id: 1, year: '2015', title: '公司创立', description: '公司正式成立，确立"以人为本、创新驱动"的初创文化基调。', color: '#6366f1' },
+  { id: 2, year: '2017', title: '核心价值观确立', description: '正式发布"诚信、协作、卓越、担当"四大核心价值观，融入日常管理。', color: '#10b981' },
+  { id: 3, year: '2019', title: '文化手册发布', description: '首部《企业文化手册》发布，系统梳理使命、愿景与行为准则。', color: '#f59e0b' },
+  { id: 4, year: '2021', title: '员工荣誉计划启动', description: '启动"星光荣誉"员工表彰计划，每月评选文化标杆人物。', color: '#3b82f6' },
+  { id: 5, year: '2023', title: '文化空间落成', description: '全新办公文化空间开放，设立文化墙、荣誉角和团队活动区。', color: '#ec4899' },
+  { id: 6, year: '2025', title: '文化数字化升级', description: '上线企业文化数字平台，实现文化内容沉淀与全员互动。', color: '#8b5cf6' }
+])
+
+// ===== 文化活动动态数据 =====
+const sidebarActivities = ref([
+  { id: 1, month: '6月', day: '05', title: '季度文化分享会', description: '各部门文化故事分享，回顾本季度亮点。' },
+  { id: 2, month: '6月', day: '12', title: '新人融入茶话会', description: '帮助新同事快速融入团队，了解公司文化。' },
+  { id: 3, month: '6月', day: '20', title: '星光荣誉颁奖典礼', description: '本月优秀员工表彰，弘扬文化标杆。' },
+  { id: 4, month: '6月', day: '28', title: '团队户外拓展', description: '增强团队凝聚力，践行协作价值观。' }
+])
 const maxHotWord = computed(() => Math.max(...hotWords.value.map(h => h.count)))
 
 // ===== 导航 =====
@@ -440,7 +455,7 @@ const navItems = [
   { key: 'honor', label: '员工荣誉', icon: 'Trophy' },
   { key: 'events', label: '团队活动', icon: 'Calendar' },
   { key: 'policies', label: '制度导航', icon: 'Tickets' },
-  { key: 'ai', label: 'AI 文化助手', icon: 'ChatDotRound' }
+  { key: 'timeline', label: '文化时间线', icon: 'Timer' }
 ]
 
 const activeTab = ref('overview')
@@ -477,42 +492,6 @@ function handleAiInterpret() {
   setTimeout(() => {
     ElMessage.success('AI 解读完成：该制度主要涵盖 3 个核心要点，建议重点关注第二章的安全责任条款。')
   }, 1500)
-}
-
-// ===== AI 文化助手（右侧面板） =====
-let sideMsgId = 0
-const aiSideMessages = ref<AiChatMessage[]>([])
-const aiSideMsgRef = ref<HTMLElement | null>(null)
-
-async function handleSideAsk(question: string) {
-  aiSideMessages.value.push({ id: `side-u-${++sideMsgId}`, role: 'user', content: question })
-  await nextTick()
-  scrollBottom(aiSideMsgRef)
-  setTimeout(() => {
-    aiSideMessages.value.push({ id: `side-a-${sideMsgId}`, role: 'assistant', content: getAiAnswer(question) })
-    nextTick(() => scrollBottom(aiSideMsgRef))
-  }, 600)
-}
-
-// ===== AI 问答（中间 Tab） =====
-let inlineMsgId = 0
-const aiInlineMessages = ref<AiChatMessage[]>([])
-const aiInlineMsgRef = ref<HTMLElement | null>(null)
-
-async function handleInlineAsk(question: string) {
-  aiInlineMessages.value.push({ id: `inline-u-${++inlineMsgId}`, role: 'user', content: question })
-  await nextTick()
-  scrollBottom(aiInlineMsgRef)
-  setTimeout(() => {
-    aiInlineMessages.value.push({ id: `inline-a-${inlineMsgId}`, role: 'assistant', content: getAiAnswer(question) })
-    nextTick(() => scrollBottom(aiInlineMsgRef))
-  }, 600)
-}
-
-function scrollBottom(elRef: { value: HTMLElement | null }) {
-  if (elRef.value) {
-    elRef.value.scrollTop = elRef.value.scrollHeight
-  }
 }
 </script>
 
@@ -1090,73 +1069,57 @@ function scrollBottom(elRef: { value: HTMLElement | null }) {
   }
 }
 
-/* -- AI 问答 (中间 Tab) -- */
-.ai-section {
-  min-height: 400px;
+/* -- 文化时间线 -- */
+.culture-timeline {
+  padding-left: 4px;
 }
 
-.ai-inline-chat {
+.ct-item {
+  display: flex;
+  gap: 16px;
+  min-height: 80px;
+}
+
+.ct-marker {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-}
-
-.ai-welcome {
-  display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #f0f4ff, #e8edff);
-  :deep(.app-icon) { width: 24px; height: 24px; color: #6366f1; flex-shrink: 0; }
-  p { margin: 0; font-size: 13px; color: #475569; line-height: 1.5; }
+  flex: 0 0 20px;
+
+  .ct-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 3px solid #e0e7ff;
+    flex-shrink: 0;
+  }
+
+  .ct-line {
+    width: 2px;
+    flex: 1;
+    background: #e0e7ff;
+    margin-top: 4px;
+  }
 }
 
-.ai-messages {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-height: 400px;
-  overflow-y: auto;
-  padding: 4px;
-}
+.ct-content {
+  flex: 1;
+  padding-bottom: 20px;
 
-.ai-msg {
-  display: flex;
+  .ct-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    h4 { margin: 0; font-size: 15px; font-weight: 700; color: #1f2937; }
+  }
 
-  &--user { justify-content: flex-end; }
-  &--assistant { justify-content: flex-start; }
-
-  .ai-msg-bubble {
-    max-width: 80%;
-    padding: 10px 14px;
-    border-radius: 10px;
+  .ct-desc {
+    margin: 0;
     font-size: 13px;
+    color: #475569;
     line-height: 1.6;
-    white-space: pre-wrap;
-    word-break: break-word;
   }
-
-  &--user .ai-msg-bubble {
-    background: #6366f1;
-    color: #fff;
-    border-bottom-right-radius: 3px;
-  }
-
-  &--assistant .ai-msg-bubble {
-    background: #f1f5f9;
-    color: #1f2937;
-    border-bottom-left-radius: 3px;
-  }
-}
-
-.ai-presets {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-
-  .preset-label { font-size: 13px; color: #94a3b8; font-weight: 500; }
 }
 
 /* ===== 右侧面板 ===== */
@@ -1180,34 +1143,44 @@ function scrollBottom(elRef: { value: HTMLElement | null }) {
   }
 }
 
-/* AI 文化助手 (右侧) */
-.sidebar-ai {
-  border: 1px solid #dde4ff;
-  background: linear-gradient(180deg, #fafbff 0%, #fff 100%);
+/* 文化活动动态 (右侧) */
+.sidebar-activities {
+  border: 1px solid #d1fae5;
+  background: linear-gradient(180deg, #f0fdf4 0%, #fff 100%);
 }
 
-.ai-chat-box {
-  max-height: 260px;
-  overflow-y: auto;
-  margin-bottom: 10px;
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 
-  .ai-welcome-mini {
-    padding: 10px 12px;
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+
+  .act-date-badge {
+    flex: 0 0 44px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 6px;
     border-radius: 8px;
-    background: #f1f5f9;
-    font-size: 12px;
-    color: #475569;
-    line-height: 1.5;
-    margin-bottom: 8px;
+    background: #ecfdf5;
+    border: 1px solid #bbf7d0;
+
+    .act-month { display: block; font-size: 10px; font-weight: 600; color: #16a34a; }
+    .act-day { display: block; font-size: 16px; font-weight: 800; color: #15803d; line-height: 1; margin-top: 1px; }
   }
 
-  .ai-msg-bubble { font-size: 12px; padding: 8px 10px; }
-}
+  .act-info {
+    flex: 1;
+    min-width: 0;
 
-.ai-presets-mini {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+    .act-title { display: block; font-size: 13px; font-weight: 600; color: #1f2937; line-height: 1.3; }
+    .act-desc { display: block; font-size: 12px; color: #6b7280; margin-top: 3px; line-height: 1.4; }
+  }
 }
 
 /* 文化热词 */

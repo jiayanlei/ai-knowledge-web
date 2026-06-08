@@ -84,11 +84,11 @@ export function getTeamProjectsMock(): TeamProject[] {
       }
     },
     {
-      id: 3, name: '经营数据驾驶舱', desc: '沉淀经营指标、数据口径、报表规则和可视化看板经验。',
+      id: 3, name: '经营数据资产库', desc: '沉淀经营指标、数据口径、报表规则和可视化看板经验。',
       owner: '周鹏', status: '沉淀中', valueLevel: '中价值', completeness: 58, updatedAt: '2026-06-03 13:52',
       tags: ['数据看板', '统计口径', '经营分析'], missingItems: ['指标说明', '数据来源'],
       memory: {
-        summary: '企业经营数据的统一展示平台，包含财务指标、销售漏斗、客户画像和运营效率等核心看板。',
+        summary: '企业经营数据的知识资产沉淀空间，包含财务指标、销售漏斗、客户画像和运营效率等核心口径。',
         members: [{ name: '周鹏', role: '数据分析' }, { name: '吴静', role: '前端开发' }],
         keyAssets: [{ name: '指标口径文档', type: '文档' }, { name: '报表配置', type: '配置' }, { name: '数据源说明', type: '文档' }],
         recentChanges: [{ time: '2026-06-03', action: '新增客户画像看板' }, { time: '2026-05-28', action: '调整营收指标计算逻辑' }],

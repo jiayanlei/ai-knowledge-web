@@ -15,6 +15,11 @@ interface Star {
   r: number; o: number; baseO: number; layer: number; hue: number
 }
 
+interface Meteor {
+  x: number; y: number; len: number; speed: number; alpha: number
+  delay: number; life: number; hue: number
+}
+
 function init() {
   const canvas = canvasRef.value
   if (!canvas) return
@@ -66,6 +71,25 @@ function init() {
     { x: 0.5, y: 0.5, rx: 350, ry: 250, color: 'rgba(6,182,212,0.015)', phase: 3 },
     { x: 0.15, y: 0.75, rx: 180, ry: 120, color: 'rgba(168,85,247,0.018)', phase: 4.5 }
   ]
+
+  /* ---- Light meteor trails ---- */
+  const meteors: Meteor[] = []
+  const METEOR_COUNT = Math.max(4, Math.min(9, Math.floor(W * H / 90000)))
+  function resetMeteor(m: Meteor, first = false) {
+    m.x = Math.random() * W * 1.15 - W * 0.1
+    m.y = -Math.random() * H * 0.45 - 20
+    m.len = 42 + Math.random() * 54
+    m.speed = 0.55 + Math.random() * 0.45
+    m.alpha = 0
+    m.delay = first ? Math.random() * 280 : 120 + Math.random() * 260
+    m.life = 0
+    m.hue = Math.random() < 0.65 ? 195 + Math.random() * 20 : 225 + Math.random() * 25
+  }
+  for (let i = 0; i < METEOR_COUNT; i++) {
+    const meteor = {} as Meteor
+    resetMeteor(meteor, true)
+    meteors.push(meteor)
+  }
 
   /* ---- Mouse tracking ---- */
   const onMove = (e: MouseEvent) => {
@@ -137,6 +161,47 @@ function init() {
       ctx!.fillStyle = `hsla(${s.hue},50%,85%,${alpha})`
       ctx!.fill()
     }
+
+    // Meteors
+    ctx!.save()
+    ctx!.globalCompositeOperation = 'lighter'
+    ctx!.lineCap = 'round'
+    for (const m of meteors) {
+      if (m.delay > 0) {
+        m.delay -= 1
+        continue
+      }
+
+      m.life += 1
+      m.x += m.speed * 1.9
+      m.y += m.speed
+      const fadeIn = Math.min(1, m.life / 45)
+      const fadeOut = Math.max(0, 1 - (m.y - H * 0.52) / (H * 0.55))
+      m.alpha = Math.min(0.32, fadeIn * fadeOut * 0.28)
+
+      const tailX = m.x - m.len
+      const tailY = m.y - m.len * 0.52
+      const g = ctx!.createLinearGradient(tailX, tailY, m.x, m.y)
+      g.addColorStop(0, `hsla(${m.hue},85%,72%,0)`)
+      g.addColorStop(0.55, `hsla(${m.hue},85%,74%,${m.alpha * 0.45})`)
+      g.addColorStop(1, `hsla(${m.hue},95%,88%,${m.alpha})`)
+      ctx!.strokeStyle = g
+      ctx!.lineWidth = 1
+      ctx!.beginPath()
+      ctx!.moveTo(tailX, tailY)
+      ctx!.lineTo(m.x, m.y)
+      ctx!.stroke()
+
+      ctx!.beginPath()
+      ctx!.arc(m.x, m.y, 1.1, 0, Math.PI * 2)
+      ctx!.fillStyle = `hsla(${m.hue},95%,88%,${m.alpha * 0.9})`
+      ctx!.fill()
+
+      if (m.x > W + m.len || m.y > H + m.len || m.alpha <= 0 && m.life > 80) {
+        resetMeteor(m)
+      }
+    }
+    ctx!.restore()
 
     // Constellation lines
     ctx!.lineWidth = 0.4

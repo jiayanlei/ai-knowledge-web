@@ -24,7 +24,7 @@ export const routes: RouteRecordRaw[] = [
         path: 'ai-chat',
         name: 'AiChat',
         component: () => import('@/views/ai-chat/index.vue'),
-        meta: { title: '企业知识 AI 工作台' }
+        meta: { title: 'AI 工作台' }
       },
       {
         path: 'knowledge',
@@ -42,7 +42,7 @@ export const routes: RouteRecordRaw[] = [
         path: 'project-assets',
         name: 'ProjectAssets',
         component: () => import('@/views/project-assets/index.vue'),
-        meta: { title: '团队资产驾驶舱' }
+        meta: { title: '团队资产库' }
       },
       {
         path: 'document',
@@ -67,6 +67,12 @@ export const routes: RouteRecordRaw[] = [
         name: 'History',
         component: () => import('@/views/history/index.vue'),
         meta: { title: 'AI 问答洞察中心' }
+      },
+      {
+        path: 'knowledge-subscription',
+        name: 'KnowledgeSubscription',
+        component: () => import('@/views/knowledge-subscription/index.vue'),
+        meta: { title: '知识订阅' }
       },
       {
         path: 'culture',

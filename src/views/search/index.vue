@@ -12,8 +12,8 @@
             <div class="search-glow" />
             <div class="search-inner">
               <AppIcon name="Search" class="si-icon" />
-              <input v-model="searchKeyword" class="si-input" placeholder="请输入你想了解的制度、流程、项目、福利、规范..." @keyup.enter="doSearch" @focus="searchFocused = true" @blur="searchFocused = false" />
-              <el-button type="primary" size="large" round @click="doSearch" class="si-btn">智能搜索</el-button>
+              <input v-model="searchKeyword" class="si-input" placeholder="请输入制度、流程、项目文档、员工手册等关键词..." @keyup.enter="doSearch" @focus="searchFocused = true" @blur="searchFocused = false" />
+              <button type="button" class="si-btn" @click="doSearch">智能搜索</button>
             </div>
           </div>
           <div class="sh-hot">
@@ -27,6 +27,59 @@
           </div>
         </div>
       </header>
+
+      <!-- ===== 语义理解与质量指标 ===== -->
+      <section class="search-overview">
+        <div class="semantic-panel app-card">
+          <div class="module-head">
+            <div>
+              <h3><AppIcon name="MagicStick" /> 语义理解</h3>
+              <p>根据输入自动识别查询意图、命中范围和核心关键词。</p>
+            </div>
+            <span class="semantic-badge">实时解析</span>
+          </div>
+          <div class="semantic-content">
+            <div class="semantic-row">
+              <span>识别意图</span>
+              <strong>{{ semanticUnderstanding.intent }}</strong>
+            </div>
+            <div class="semantic-row">
+              <span>命中范围</span>
+              <div class="semantic-tags">
+                <el-tag v-for="scope in semanticUnderstanding.scopes" :key="scope" size="small" effect="plain">{{ scope }}</el-tag>
+              </div>
+            </div>
+            <div class="semantic-row">
+              <span>关键词提取</span>
+              <div class="keyword-pills">
+                <button v-for="kw in semanticUnderstanding.keywords" :key="kw" type="button" @click="quickSearch(kw)">{{ kw }}</button>
+              </div>
+            </div>
+            <div class="confidence-line">
+              <span>理解置信度</span>
+              <el-progress :percentage="semanticUnderstanding.confidence" :stroke-width="8" :show-text="false" />
+              <strong>{{ semanticUnderstanding.confidence }}%</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="quality-panel app-card">
+          <div class="module-head">
+            <div>
+              <h3><AppIcon name="TrendCharts" /> 检索质量指标</h3>
+              <p>跟踪搜索效果、无结果问题和员工反馈满意度。</p>
+            </div>
+          </div>
+          <div class="quality-grid">
+            <div v-for="m in qualityMetrics" :key="m.label" class="quality-card" :class="'tone-' + m.tone">
+              <AppIcon :name="m.icon" />
+              <span>{{ m.label }}</span>
+              <strong>{{ m.value }}</strong>
+              <small>{{ m.desc }}</small>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <!-- ===== 搜索结果区域 ===== -->
       <div v-if="hasSearched && !searching" class="results-area">
@@ -157,13 +210,24 @@
                   <el-tag v-for="b in r.badges" :key="b" size="small" :type="badgeType(b)" effect="plain">{{ b }}</el-tag>
                 </div>
               </div>
+              <div class="rc-logic">
+                <div>
+                  <span>所属模块</span>
+                  <strong>{{ r.sourceLabel }} · {{ r.categoryLabel }}</strong>
+                </div>
+                <div>
+                  <span>匹配原因</span>
+                  <strong>{{ resultReason(r) }}</strong>
+                </div>
+              </div>
               <p class="rc-summary">{{ r.summary }}</p>
+              <p class="rc-snippet"><span>相关片段</span>{{ resultSnippet(r) }}</p>
               <div class="rc-tags">
                 <el-tag v-for="t in r.tags.slice(0, 5)" :key="t" size="small" type="info" effect="plain" round>{{ t }}</el-tag>
               </div>
               <div class="rc-meta">
                 <div class="rcm-left">
-                  <span class="rc-match"><strong :style="{ color: matchColor(r.matchScore) }">{{ r.matchScore }}%</strong> 匹配</span>
+                  <span class="rc-match">相似度 <strong :style="{ color: matchColor(r.matchScore) }">{{ r.matchScore }}%</strong></span>
                   <span class="rc-authority" :class="'auth-' + r.authority">
                     <AppIcon :name="r.authority === 'official' ? 'Stamp' : r.authority === 'verified' ? 'Badge' : 'User'" />
                     {{ authorityLabel(r.authority) }}
@@ -174,16 +238,14 @@
               </div>
               <div class="rc-footer">
                 <div class="rcf-info">
-                  <span>{{ r.sourceLabel }} · {{ r.dept }}</span>
-                  <span>{{ r.version }} · {{ r.updateTime }}</span>
+                  <span>{{ r.dept }} · {{ r.version }}</span>
+                  <span>{{ r.updateTime }} 更新</span>
                   <span>阅读 {{ r.views }} · 引用 {{ r.citations }}</span>
                 </div>
                 <div class="rcf-actions">
                   <el-button text size="small" type="primary" @click.stop="openDetail(r.id)">查看详情</el-button>
-                  <el-button text size="small" type="primary" @click.stop="openAiInterpret(r)">AI 解读</el-button>
-                  <el-button text size="small" @click.stop="handleFavorite(r)">收藏</el-button>
-                  <el-button text size="small" @click.stop="handleCopyCite(r)">引用</el-button>
-                  <el-button text size="small" @click.stop="openVersionTimeline(r)">版本</el-button>
+                  <el-button text size="small" type="primary" @click.stop="handleLocateSource(r)">定位来源</el-button>
+                  <el-button text size="small" @click.stop="handleSubscribe(r)">加入订阅</el-button>
                 </div>
               </div>
             </div>
@@ -211,6 +273,41 @@
             </div>
           </div>
         </div>
+
+        <div class="insight-grid">
+          <section class="hot-knowledge app-card">
+            <div class="module-head">
+              <div>
+                <h3><AppIcon name="QuestionFilled" /> 热门问题</h3>
+                <p>员工近期高频检索的问题，可直接点击再次检索。</p>
+              </div>
+            </div>
+            <div class="hot-question-list">
+              <button v-for="q in hotQuestionList" :key="q" type="button" @click="quickSearch(q)">
+                <span>{{ q }}</span>
+                <AppIcon name="Right" />
+              </button>
+            </div>
+          </section>
+
+          <section class="retrieval-insight app-card">
+            <div class="module-head">
+              <div>
+                <h3><AppIcon name="DataAnalysis" /> 检索洞察</h3>
+                <p>从搜索日志中发现知识缺口、低命中主题和更新重点。</p>
+              </div>
+            </div>
+            <div class="insight-list">
+              <div v-for="item in retrievalInsights" :key="item.title" class="insight-item">
+                <span class="insight-dot" :class="'dot-' + item.tone" />
+                <div>
+                  <strong>{{ item.title }}</strong>
+                  <p>{{ item.desc }}</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
 
       <!-- ===== 初始状态（未搜索时） ===== -->
@@ -236,6 +333,41 @@
             <h4>知识聚合</h4>
             <p>同主题文档打包，构建完整知识链</p>
           </div>
+        </div>
+
+        <div class="insight-grid">
+          <section class="hot-knowledge app-card">
+            <div class="module-head">
+              <div>
+                <h3><AppIcon name="QuestionFilled" /> 热门问题 / 高频知识</h3>
+                <p>覆盖报销、入职、权限、项目交接等常见企业知识场景。</p>
+              </div>
+            </div>
+            <div class="hot-question-list">
+              <button v-for="q in hotQuestionList" :key="q" type="button" @click="quickSearch(q)">
+                <span>{{ q }}</span>
+                <AppIcon name="Right" />
+              </button>
+            </div>
+          </section>
+
+          <section class="retrieval-insight app-card">
+            <div class="module-head">
+              <div>
+                <h3><AppIcon name="DataAnalysis" /> 检索洞察</h3>
+                <p>辅助管理员判断哪些知识需要补充、更新或调整排序。</p>
+              </div>
+            </div>
+            <div class="insight-list">
+              <div v-for="item in retrievalInsights" :key="item.title" class="insight-item">
+                <span class="insight-dot" :class="'dot-' + item.tone" />
+                <div>
+                  <strong>{{ item.title }}</strong>
+                  <p>{{ item.desc }}</p>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
 
@@ -377,19 +509,70 @@ const versionDoc = ref<SearchResult | null>(null)
 // ===== AI 答案 =====
 const aiAnswer = ref<AiAnswer | null>(null)
 
+// ===== 页面补充数据 =====
+const qualityMetrics = [
+  { label: '今日检索次数', value: '1,286', desc: '较昨日 +12%', icon: 'Search', tone: 'blue' },
+  { label: '平均命中率', value: '93.8%', desc: '核心制度命中稳定', icon: 'Aim', tone: 'green' },
+  { label: '无结果问题数', value: '18', desc: '需补充知识 6 条', icon: 'WarningFilled', tone: 'amber' },
+  { label: '热门搜索词', value: '报销制度', desc: '出现 146 次', icon: 'TrendCharts', tone: 'purple' },
+  { label: '反馈满意度', value: '96%', desc: '近 7 日员工评价', icon: 'StarFilled', tone: 'rose' }
+]
+
+const hotQuestionList = [
+  '差旅报销需要哪些材料？',
+  '新员工入职流程是什么？',
+  '项目交接文档在哪里？',
+  'VPN 权限怎么申请？',
+  '绩效考核规则在哪里看？'
+]
+
+const retrievalInsights = [
+  { title: '报销与发票问题搜索频率最高', desc: '财务制度相关查询占今日检索 31%，费用、审批、发票是主要关键词。', tone: 'blue' },
+  { title: '项目交接类知识命中率偏低', desc: '交接模板能命中，但具体项目运维记录不足，建议团队资产库补齐交接说明。', tone: 'amber' },
+  { title: '权限申请流程需要补充场景说明', desc: 'VPN、Git、数据库权限被频繁追问，可增加按系统分类的申请入口说明。', tone: 'purple' },
+  { title: '技术管理部文档更新最频繁', desc: '发布规范、代码审查、运维手册本周合计更新 9 次，检索热度持续上升。', tone: 'green' }
+]
+
+const semanticUnderstanding = computed(() => {
+  const keyword = searchKeyword.value.trim()
+  const normalized = keyword.toLowerCase()
+  if (!keyword) {
+    return {
+      intent: '制度查询 / 流程查询 / 项目资料',
+      scopes: ['知识库', '文档中心', '团队资产库', '企业文化'],
+      keywords: ['费用', '审批', '负责人', '流程节点'],
+      confidence: 88
+    }
+  }
+
+  if (keyword.includes('报销') || keyword.includes('发票') || keyword.includes('差旅') || keyword.includes('费用')) {
+    return { intent: '制度查询 / 财务流程', scopes: ['知识库', '文档中心', '财务中心'], keywords: ['费用', '审批', '发票', '流程节点'], confidence: 96 }
+  }
+  if (keyword.includes('入职') || keyword.includes('新人') || keyword.includes('员工手册')) {
+    return { intent: '流程查询 / 员工手册', scopes: ['员工手册', '企业文化', '知识库'], keywords: ['新人', '账号开通', '培训', '转正'], confidence: 92 }
+  }
+  if (keyword.includes('项目') || keyword.includes('交接') || normalized.includes('k8s') || keyword.includes('技术规范')) {
+    return { intent: '项目资料 / 技术规范', scopes: ['团队资产库', '文档中心', '知识库'], keywords: ['负责人', '部署', '交接', '运维'], confidence: 89 }
+  }
+  if (keyword.includes('权限') || normalized.includes('vpn')) {
+    return { intent: '权限规范 / 流程查询', scopes: ['文档中心', '技术中心', '知识库'], keywords: ['权限', '审批', '有效期', '负责人'], confidence: 91 }
+  }
+  return { intent: '综合知识搜索', scopes: ['知识库', '文档中心', '团队资产库'], keywords: [keyword, '负责人', '流程', '更新时间'], confidence: 78 }
+})
+
 // ===== 计算 =====
 const maxSourceCount = computed(() => Math.max(...sources.value.map(s => s.count)))
 
 const filteredResults = computed(() => {
   return allResults.value.filter(r => {
-    if (searchKeyword.value) {
-      const kw = searchKeyword.value.toLowerCase()
-      const match = r.title.toLowerCase().includes(kw) || r.summary.toLowerCase().includes(kw) || r.tags.some(t => t.toLowerCase().includes(kw)) || r.categoryLabel.includes(kw) || r.dept.toLowerCase().includes(kw)
+    const terms = getSearchTerms(searchKeyword.value)
+    if (terms.length) {
+      const match = terms.some(kw => r.title.toLowerCase().includes(kw) || r.summary.toLowerCase().includes(kw) || r.tags.some(t => t.toLowerCase().includes(kw)) || r.categoryLabel.toLowerCase().includes(kw) || r.dept.toLowerCase().includes(kw))
       if (!match) return false
     }
     if (activeSourceFilter.value) {
-      const srcMap: Record<string, string> = { src1: 'finance_center', src2: 'hr_center', src3: 'tech_center', src4: 'hr_center', src5: 'hr_center', src6: 'finance_center' }
-      // Simplified: match by category name
+      const categoryMap: Record<string, string> = { src1: 'company_policy', src2: 'handbook', src3: 'project', src4: 'benefit', src5: 'process', src6: 'faq' }
+      if (r.category !== categoryMap[activeSourceFilter.value]) return false
     }
     if (filterCategory.value.length && !filterCategory.value.includes(r.category)) return false
     if (filterSource.value.length && !filterSource.value.includes(r.source)) return false
@@ -401,8 +584,8 @@ const filteredResults = computed(() => {
 
 const matchedPackages = computed(() => {
   if (!searchKeyword.value) return packages.value
-  const kw = searchKeyword.value.toLowerCase()
-  return packages.value.filter(p => p.title.toLowerCase().includes(kw) || p.description.toLowerCase().includes(kw) || p.docs.some(d => d.title.toLowerCase().includes(kw)))
+  const terms = getSearchTerms(searchKeyword.value)
+  return packages.value.filter(p => terms.some(kw => p.title.toLowerCase().includes(kw) || p.description.toLowerCase().includes(kw) || p.docs.some(d => d.title.toLowerCase().includes(kw))))
 })
 
 const detailVersions = computed(() => detailDoc.value ? (versionTimelines[detailDoc.value.id] || []) : [])
@@ -423,6 +606,35 @@ function badgeType(b: string) {
 }
 function matchColor(score: number) { return score >= 90 ? '#22c55e' : score >= 70 ? '#3b82f6' : '#f59e0b' }
 function authorityLabel(a: string) { return a === 'official' ? '官方权威' : a === 'verified' ? '已验证' : '社区贡献' }
+function getSearchTerms(keyword: string) {
+  const kw = keyword.trim().toLowerCase()
+  if (!kw) return []
+  const terms = [kw]
+  const maps = [
+    { keys: ['差旅', '报销', '费用', '发票', '材料'], terms: ['报销', '差旅', '发票', '审批'] },
+    { keys: ['入职', '新人', '员工手册'], terms: ['入职', '新人', '培训', '账号'] },
+    { keys: ['项目', '交接', '文档在哪里'], terms: ['项目', '交接', '模板'] },
+    { keys: ['vpn', '权限', '申请'], terms: ['权限', '申请', '审批'] },
+    { keys: ['绩效', '考核', 'okr'], terms: ['绩效', '考核', 'okr'] },
+    { keys: ['福利', '补贴'], terms: ['福利', '补贴'] },
+    { keys: ['技术规范', '代码规范'], terms: ['技术规范', '代码规范', 'review'] }
+  ]
+  maps.forEach(item => {
+    if (item.keys.some(k => kw.includes(k))) terms.push(...item.terms)
+  })
+  return [...new Set(terms)]
+}
+function resultReason(r: SearchResult) {
+  const kw = searchKeyword.value.trim()
+  if (!kw) return `${r.categoryLabel}高相关，按相似度与权威等级排序`
+  const hitTags = r.tags.filter(t => kw.includes(t) || t.includes(kw)).slice(0, 2)
+  if (hitTags.length) return `命中标签：${hitTags.join('、')}`
+  if (r.title.includes(kw)) return '标题与检索词直接匹配'
+  return `${r.categoryLabel}语义相近，来源可信度较高`
+}
+function resultSnippet(r: SearchResult) {
+  return r.summary.length > 86 ? `${r.summary.slice(0, 86)}...` : r.summary
+}
 function toggleFilter(type: string, value: string) {
   const arr = type === 'category' ? filterCategory : type === 'source' ? filterSource : type === 'state' ? filterState : filterSmartTag
   const idx = arr.value.indexOf(value)
@@ -458,6 +670,8 @@ function openAiInterpret(r: SearchResult) { interpretDoc.value = r; aiInterpretV
 function openVersionTimeline(r: SearchResult) { versionDoc.value = r; versionDialogVisible.value = true }
 function handleFavorite(r: SearchResult) { ElMessage.success(`已收藏「${r.title}」`) }
 function handleCopyCite(r: SearchResult) { ElMessage.success('引用信息已复制到剪贴板') }
+function handleLocateSource(r: SearchResult) { ElMessage.info(`已定位到「${r.sourceLabel} / ${r.dept}」`) }
+function handleSubscribe(r: SearchResult) { ElMessage.success(`已订阅「${r.title}」的更新`) }
 </script>
 
 <style scoped lang="scss">
@@ -465,12 +679,12 @@ function handleCopyCite(r: SearchResult) { ElMessage.success('引用信息已复
 
 /* ===== 搜索指挥台 ===== */
 .search-hero {
-  position: relative; border-radius: var(--app-card-radius); overflow: hidden;
+  position: relative; min-height: 220px; border-radius: var(--app-card-radius); overflow: hidden;
   .sh-bg { position: absolute; inset: 0; background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 40%, #0e7490 80%, #06b6d4 100%); }
   .sh-bg::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 50%, rgba(6,182,212,0.15) 0%, transparent 70%); }
   .sh-bg::after { content: ''; position: absolute; top: 50%; left: 50%; width: 300px; height: 300px; border: 1px solid rgba(6,182,212,0.08); border-radius: 50%; transform: translate(-50%, -50%); animation: radar-pulse 4s ease-out infinite; }
   @keyframes radar-pulse { 0% { width: 100px; height: 100px; opacity: 1; } 100% { width: 500px; height: 500px; opacity: 0; } }
-  .sh-content { position: relative; padding: 24px 28px; color: #fff; }
+  .sh-content { position: relative; z-index: 1; min-height: 220px; padding: 24px 28px; color: #fff; }
   .sh-kicker { display: flex; align-items: center; gap: 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.5; margin-bottom: 4px; span { width: 18px; height: 2px; background: #06b6d4; border-radius: 1px; } }
   h1 { font-size: 22px; font-weight: 700; margin: 0 0 2px; }
   & > .sh-content > p { font-size: 13px; opacity: 0.6; margin: 0 0 16px; letter-spacing: 2px; }
@@ -480,7 +694,29 @@ function handleCopyCite(r: SearchResult) { ElMessage.success('引用信息已复
     .search-inner { position: relative; display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.12); backdrop-filter: blur(12px); border-radius: 14px; padding: 6px 8px 6px 16px; border: 1px solid rgba(255,255,255,0.15); }
     .si-icon { font-size: 20px; color: rgba(255,255,255,0.6); flex-shrink: 0; }
     .si-input { flex: 1; background: transparent; border: none; outline: none; color: #fff; font-size: 15px; &::placeholder { color: rgba(255,255,255,0.4); } }
-    .si-btn { flex-shrink: 0; }
+    .si-btn {
+      flex-shrink: 0;
+      height: 40px;
+      padding: 0 20px;
+      border: 0;
+      border-radius: 999px;
+      color: #fff;
+      background: linear-gradient(135deg, #1677ff, #06b6d4);
+      box-shadow: 0 8px 18px rgba(22,119,255,0.22);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.18s, box-shadow 0.18s;
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 22px rgba(22,119,255,0.28);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
   }
   .sh-hot { display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
     .hot-label { font-size: 12px; opacity: 0.5; }
@@ -494,15 +730,262 @@ function handleCopyCite(r: SearchResult) { ElMessage.success('引用信息已复
   }
 }
 
+/* ===== 语义理解与指标 ===== */
+.search-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: var(--app-section-gap);
+}
+
+.module-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0;
+    color: #172554;
+    font-size: 14px;
+    font-weight: 700;
+
+    .app-icon {
+      color: #1677ff;
+      font-size: 16px;
+    }
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+}
+
+.semantic-panel,
+.quality-panel {
+  padding: 16px;
+  min-width: 0;
+}
+
+.semantic-badge {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: 999px;
+  color: #0e7490;
+  background: #ecfeff;
+  border: 1px solid #cffafe;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.semantic-content {
+  display: grid;
+  gap: 10px;
+}
+
+.semantic-row {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+
+  > span {
+    color: #64748b;
+    font-size: 12px;
+  }
+
+  > strong {
+    color: #172554;
+    font-size: 13px;
+  }
+}
+
+.semantic-tags,
+.keyword-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.keyword-pills button {
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  background: #f8fbff;
+  color: #2563eb;
+  font-size: 12px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: #93c5fd;
+    background: #eff6ff;
+  }
+}
+
+.confidence-line {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr) 38px;
+  align-items: center;
+  gap: 10px;
+  color: #64748b;
+  font-size: 12px;
+
+  strong {
+    color: #22c55e;
+    font-size: 13px;
+  }
+}
+
+.quality-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.quality-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  min-height: 104px;
+  padding: 12px;
+  border: 1px solid #e6eef8;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+
+  .app-icon {
+    margin-bottom: 4px;
+    font-size: 18px;
+  }
+
+  span {
+    color: #64748b;
+    font-size: 11px;
+  }
+
+  strong {
+    color: #172554;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  small {
+    color: #94a3b8;
+    font-size: 10px;
+    line-height: 1.4;
+  }
+
+  &.tone-blue .app-icon { color: #2563eb; }
+  &.tone-green .app-icon { color: #16a34a; }
+  &.tone-amber .app-icon { color: #d97706; }
+  &.tone-purple .app-icon { color: #7c3aed; }
+  &.tone-rose .app-icon { color: #e11d48; }
+}
+
 /* ===== 初始状态 ===== */
-.initial-state { padding: 12px 0; }
+.initial-state { display: flex; flex-direction: column; gap: var(--app-section-gap); padding: 0 0 12px; }
 .is-features { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
-  .isf-item { padding: 24px 16px; text-align: center; transition: transform 0.2s;
+  .isf-item { padding: 18px 16px; text-align: center; transition: transform 0.2s;
     &:hover { transform: translateY(-3px); }
     .isf-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin: 0 auto 12px; }
     h4 { font-size: 14px; font-weight: 600; margin: 0 0 6px; color: var(--text-color); }
     p { font-size: 12px; color: var(--text-secondary); margin: 0; line-height: 1.5; }
   }
+}
+
+.insight-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: var(--app-section-gap);
+}
+
+.hot-knowledge,
+.retrieval-insight {
+  padding: 16px;
+}
+
+.hot-question-list {
+  display: grid;
+  gap: 8px;
+}
+
+.hot-question-list button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e6eef8;
+  border-radius: 8px;
+  background: #fbfdff;
+  color: #1f2a44;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  .app-icon {
+    color: #cbd5e1;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    border-color: #bfdbfe;
+    background: #f5f9ff;
+    color: #1677ff;
+  }
+}
+
+.insight-list {
+  display: grid;
+  gap: 10px;
+}
+
+.insight-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f8fbff;
+  border: 1px solid #e6eef8;
+
+  strong {
+    color: #172554;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 3px 0 0;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+}
+
+.insight-dot {
+  width: 8px;
+  height: 8px;
+  margin-top: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &.dot-blue { background: #2563eb; box-shadow: 0 0 10px rgba(37,99,235,0.28); }
+  &.dot-amber { background: #f59e0b; box-shadow: 0 0 10px rgba(245,158,11,0.28); }
+  &.dot-purple { background: #8b5cf6; box-shadow: 0 0 10px rgba(139,92,246,0.28); }
+  &.dot-green { background: #22c55e; box-shadow: 0 0 10px rgba(34,197,94,0.28); }
 }
 
 /* ===== AI 最佳答案 ===== */
@@ -576,7 +1059,15 @@ function handleCopyCite(r: SearchResult) { ElMessage.success('引用信息已复
     .rc-title { font-size: 15px; font-weight: 600; color: var(--text-color); margin: 0; flex: 1; }
     .rc-badges { display: flex; gap: 4px; flex-wrap: wrap; flex-shrink: 0; }
   }
+  .rc-logic { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 8px;
+    div { min-width: 0; padding: 8px 10px; border-radius: 8px; background: #f8fbff; border: 1px solid #edf2f7; }
+    span { display: block; color: #94a3b8; font-size: 11px; margin-bottom: 3px; }
+    strong { display: block; color: #334155; font-size: 12px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  }
   .rc-summary { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin: 0 0 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .rc-snippet { display: flex; gap: 8px; margin: 0 0 8px; padding: 8px 10px; border-left: 3px solid #93c5fd; border-radius: 6px; background: #f8fbff; color: #475569; font-size: 12px; line-height: 1.5;
+    span { flex-shrink: 0; color: #2563eb; font-weight: 700; }
+  }
   .rc-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
   .rc-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap;
     .rcm-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -647,7 +1138,28 @@ function handleCopyCite(r: SearchResult) { ElMessage.success('引用信息已复
 }
 
 /* ===== 响应式 ===== */
-@media (max-width: 1200px) { .search-body { grid-template-columns: 200px 1fr; } .source-map .sm-grid { grid-template-columns: repeat(3, 1fr); } .is-features { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 900px) { .search-body { grid-template-columns: 1fr; } .filter-radar { display: none; } .source-map .sm-grid { grid-template-columns: repeat(3, 1fr); } .rq-grid { grid-template-columns: 1fr; } }
-@media (max-width: 600px) { .source-map .sm-grid { grid-template-columns: repeat(2, 1fr); } .is-features { grid-template-columns: 1fr; } .kp-grid { grid-template-columns: 1fr; } }
+@media (max-width: 1200px) {
+  .search-body { grid-template-columns: 200px 1fr; }
+  .source-map .sm-grid { grid-template-columns: repeat(3, 1fr); }
+  .is-features { grid-template-columns: repeat(2, 1fr); }
+  .quality-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .search-overview,
+  .insight-grid,
+  .search-body { grid-template-columns: 1fr; }
+  .filter-radar { display: none; }
+  .source-map .sm-grid { grid-template-columns: repeat(3, 1fr); }
+  .rq-grid { grid-template-columns: 1fr; }
+  .quality-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .source-map .sm-grid { grid-template-columns: repeat(2, 1fr); }
+  .is-features,
+  .kp-grid,
+  .quality-grid,
+  .rc-logic { grid-template-columns: 1fr; }
+  .semantic-row,
+  .confidence-line { grid-template-columns: 1fr; }
+}
 </style>

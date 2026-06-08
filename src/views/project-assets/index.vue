@@ -6,9 +6,9 @@
         <div class="th-bg" />
         <div class="th-content">
           <div class="th-left">
-            <div class="th-kicker"><span />TEAM ASSETS COCKPIT</div>
+            <div class="th-kicker"><span />TEAM ASSET LIBRARY</div>
             <h1>团队资产库</h1>
-            <p>沉淀项目资料、交接经验、团队规范与知识记忆，让新人快速接入，让经验持续复用。</p>
+            <p>沉淀项目资料、交接经验、团队规范与知识资产，支撑团队知识资产的持续管理与复用。</p>
           </div>
           <div class="th-right">
             <div class="th-search-wrap">
